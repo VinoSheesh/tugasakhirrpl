@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💕 Will You Be My Valentine? 💕</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #ffeef8 0%, #ffe4f3 25%, #f5e6ff 50%, #fff0f5 75%, #ffe4e9 100%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+
+        .pacifico {
+            font-family: 'Pacifico', cursive;
+        }
+
+        .dancing-script {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        /* Floating Hearts Background Animation */
+        .floating-heart {
+            position: fixed;
+            font-size: 20px;
+            opacity: 0.6;
+            animation: float-up linear infinite;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes float-up {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Pulse Animation */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Bounce Animation */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .bounce-animation {
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        /* Envelope Styles */
+        .envelope {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            height: 400px;
+            margin: 0 auto;
+            perspective: 1500px;
+        }
+
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 225px solid transparent;
+            border-right: 225px solid transparent;
+            border-top: 180px solid #ffc1e0;
+            transform-origin: top center;
+            transition: transform 0.6s ease;
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        .envelope-flap.open {
+            transform: translateX(-50%) rotateX(-180deg);
+        }
+
+        .envelope-body {
+            position: absolute;
+            top: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 450px;
+            height: 280px;
+            background: #ffb3d9;
+            border-radius: 0 0 10px 10px;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .envelope-body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 225px solid transparent;
+            border-right: 225px solid transparent;
+            border-bottom: 120px solid #ff9ec7;
+        }
+
+        .letter {
+            position: absolute;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 380px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.6s ease, top 0.6s ease;
+            z-index: 2;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .letter.show {
+            top: -50px;
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        /* Polaroid Photo Style */
+        .polaroid {
+            background: white;
+            padding: 15px 15px 60px 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: rotate(0deg);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .polaroid:hover {
+            transform: rotate(0deg) scale(1.1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .polaroid img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .polaroid-caption {
+            margin-top: 15px;
+            text-align: center;
+            font-family: 'Dancing Script', cursive;
+            font-size: 18px;
+            color: #333;
+        }
+
+        /* Game Styles */
+        #game-canvas {
+            border: 3px solid #ff69b4;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: crosshair;
+        }
+
+        /* Music Player */
+        .music-player {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(255, 182, 193, 0.95);
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .music-btn {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .music-btn:hover {
+            transform: scale(1.1);
+            background: #ffe4e9;
+        }
+
+        /* Countdown Timer Styles */
+        .countdown-box {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(255, 105, 180, 0.3);
+        }
+
+        .countdown-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Love Calculator */
+        .calculator-result {
+            font-size: 4rem;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #ffe4e9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ffb3d9;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff69b4;
+        }
+
+        /* Button Styles */
+        .btn-yes {
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+            transition: all 0.3s;
+        }
+
+        .btn-yes:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(255, 107, 157, 0.5);
+        }
+
+        .btn-no {
+            background: linear-gradient(135deg, #d4a5a5 0%, #c9a0a0 100%);
+            transition: all 0.1s;
+            position: absolute;
+        }
+
+        /* Shake Animation for Proposal */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        .shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Glowing Text Effect */
+        .glow-text {
+            text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 30px #ff69b4;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .envelope {
+                max-width: 340px;
+                height: 350px;
+            }
+            
+            .envelope-flap {
+                border-left: 170px solid transparent;
+                border-right: 170px solid transparent;
+                border-top: 140px solid #ffc1e0;
+            }
+            
+            .envelope-body {
+                width: 340px;
+                top: 140px;
+                height: 240px;
+            }
+
+            .envelope-body::before {
+                border-left: 170px solid transparent;
+                border-right: 170px solid transparent;
+                border-bottom: 100px solid #ff9ec7;
+            }
+            
+            .letter {
+                width: 290px;
+                top: 120px;
+                padding: 20px;
+                max-height: 350px;
+            }
+
+            .letter.show {
+                top: -80px;
+            }
+            
+            .polaroid img {
+                height: 200px;
+            }
+
+            .countdown-number {
+                font-size: 2rem;
+            }
+
+            .music-player {
+                bottom: 20px;
+                right: 20px;
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Floating Hearts Background -->
+    <div id="floating-hearts-container"></div>
+
+    <!-- Music Player -->
+    <div class="music-player">
+        <button class="music-btn" id="music-toggle">
+            <span id="music-icon">▶️</span>
+        </button>
+        <span class="text-white font-semibold text-sm">Love Song</span>
+    </div>
+    
+    <!-- ======================= -->
+    <!-- GANTI LINK MUSIK DI SINI -->
+    <!-- ======================= -->
+    <audio id="background-music" loop>
+        <source src="./music/wave to earth - love. (Official Lyric Video).mp3" type="audio/mpeg">
+        <!-- Contoh: https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3 -->
+        <!-- Atau upload musik Anda sendiri dan ganti path-nya -->
+    </audio>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center justify-center px-4 relative z-10">
+        <div class="text-center">
+            <h1 class="pacifico text-6xl md:text-8xl text-pink-600 mb-6 pulse-animation">
+                💕 Happy Valentine's Day 💕
+            </h1>
+            
+            <!-- ======================= -->
+            <!-- GANTI NAMA PACAR DI SINI -->
+            <!-- ======================= -->
+            <h2 class="dancing-script text-4xl md:text-5xl text-purple-500 mb-8">
+                To My Dearest Quina <span class="text-pink-500 glow-text">Sayang</span>
+            </h2>
+            
+            <p class="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto leading-relaxed mb-8">
+                Setiap detik bersamamu adalah hadiah terindah yang pernah aku terima.
+                Hari ini, dan selamanya, aku ingin mengungkapkan betapa berartinya kamu bagiku... 💖
+            </p>
+            
+            <div class="bounce-animation inline-block text-4xl">
+                ↓
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Proposal Section -->
+    <section class="min-h-screen flex items-center justify-center px-4 py-20 relative z-10">
+        <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-12 max-w-2xl w-full text-center">
+            <h2 class="pacifico text-4xl md:text-5xl text-pink-600 mb-8">
+                Pertanyaan Penting sebelum menjelajahi web ini! 💝
+            </h2>
+            
+            <div id="question-container">
+                <p class="dancing-script text-3xl md:text-4xl text-purple-600 mb-12">
+                    Do you want to be my Valentine?
+                </p>
+                
+                <div class="relative h-48" id="buttons-container">
+                    <button id="yes-button" class="btn-yes text-white font-bold py-4 px-12 rounded-full text-2xl">
+                        Yes! 💖
+                    </button>
+                    <button id="no-button" class="btn-no text-white font-bold py-4 px-12 rounded-full text-2xl">
+                        No 😢
+                    </button>
+                </div>
+            </div>
+
+            <div id="success-message" class="hidden">
+                <h3 class="pacifico text-5xl text-pink-600 mb-6 glow-text">
+                    I Love You! 💕
+                </h3>
+                <p class="dancing-script text-3xl text-purple-500">
+                    You just made me the happiest person alive! 🎉
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Love Letter Section -->
+    <section class="min-h-screen flex items-center justify-center px-4 py-20 relative z-10">
+        <div class="max-w-4xl w-full">
+            <h2 class="pacifico text-4xl md:text-5xl text-pink-600 text-center mb-12">
+                A Letter For You 💌
+            </h2>
+            
+            <div class="envelope" id="envelope">
+                <div class="envelope-flap" id="envelope-flap"></div>
+                <div class="envelope-body"></div>
+                <div class="letter" id="letter">
+                    <!-- ================================ -->
+                    <!-- GANTI ISI SURAT CINTA DI SINI -->
+                    <!-- ================================ -->
+                    <h3 class="dancing-script text-3xl text-pink-600 mb-4">My Dearest Love,</h3>
+                    <p class="text-gray-700 mb-4 leading-relaxed">
+                        Setiap hari bersamamu terasa seperti mimpi yang tak ingin aku akhiri. 
+                        Senyummu adalah matahari yang menerangi hariku, dan tawamu adalah melodi 
+                        terindah yang pernah aku dengar.
+                    </p>
+                    <p class="text-gray-700 mb-4 leading-relaxed">
+                        Aku bersyukur untuk setiap momen yang kita lalui bersama - dari hal-hal 
+                        kecil seperti bercanda di pagi hari, hingga petualangan besar yang kita 
+                        rencanakan bersama. Kamu membuat hidupku lebih bermakna.
+                    </p>
+                    <p class="text-gray-700 mb-4 leading-relaxed">
+                        Terima kasih telah menjadi diriku, mendukungku, dan mencintaiku apa adanya. 
+                        Aku berjanji akan selalu ada untukmu, di saat senang maupun susah.
+                    </p>
+                    <p class="text-gray-700 mb-4 leading-relaxed">
+                        Happy Valentine's Day, my love. Aku mencintaimu lebih dari kata-kata bisa 
+                        ungkapkan. 💕
+                    </p>
+                    <p class="dancing-script text-2xl text-right text-pink-600 mt-6">
+                        Forever Yours,<br>
+                        <!-- GANTI NAMA ANDA DI SINI -->
+                        <span class="text-3xl">Your Love</span> 💖
+                    </p>
+                </div>
+            </div>
+            
+            <p class="text-center mt-8 text-gray-600 dancing-script text-xl">
+                Click the envelope to open 💌
+            </p>
+        </div>
+    </section>
+
+    <!-- Memory Gallery Section -->
+    <section class="min-h-screen px-4 py-20 relative z-10">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="pacifico text-4xl md:text-5xl text-pink-600 text-center mb-12">
+                Our Beautiful Memories 📸
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- ================================== -->
+                <!-- GANTI PATH FOTO-FOTO DI SINI -->
+                <!-- ================================== -->
+                
+                <!-- Photo 1 -->
+                <div class="polaroid" style="rotate: -2deg;">
+                    <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400" alt="Memory 1">
+                    <div class="polaroid-caption">Our First Date 💕</div>
+                </div>
+
+                <!-- Photo 2 -->
+                <div class="polaroid" style="rotate: 3deg;">
+                    <img src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400" alt="Memory 2">
+                    <div class="polaroid-caption">Adventure Together 🌄</div>
+                </div>
+
+                <!-- Photo 3 -->
+                <div class="polaroid" style="rotate: -1deg;">
+                    <img src="https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=400" alt="Memory 3">
+                    <div class="polaroid-caption">Sweet Moments 🍰</div>
+                </div>
+
+                <!-- Photo 4 -->
+                <div class="polaroid" style="rotate: 2deg;">
+                    <img src="https://images.unsplash.com/photo-1542223616-9de9adb5e3e8?w=400" alt="Memory 4">
+                    <div class="polaroid-caption">Sunset Views 🌅</div>
+                </div>
+
+                <!-- Photo 5 -->
+                <div class="polaroid" style="rotate: -3deg;">
+                    <img src="https://images.unsplash.com/photo-1511988617509-a57c8a288659?w=400" alt="Memory 5">
+                    <div class="polaroid-caption">Cozy Times ☕</div>
+                </div>
+
+                <!-- Photo 6 -->
+                <div class="polaroid" style="rotate: 1deg;">
+                    <img src="https://images.unsplash.com/photo-1521309569781-8c8c7e0a374f?w=400" alt="Memory 6">
+                    <div class="polaroid-caption">Forever & Always 💑</div>
+                </div>
+            </div>
+
+            <!-- Cara mengganti foto:
+                 1. Upload foto Anda ke hosting (imgur, cloudinary, atau hosting lain)
+                 2. Atau letakkan foto di folder yang sama dengan HTML ini
+                 3. Ganti src="..." dengan path foto Anda
+                 4. Contoh: src="foto1.jpg" atau src="https://link-foto-anda.com/foto.jpg"
+                 5. Ganti juga text caption di dalam <div class="polaroid-caption">
+            -->
+        </div>
+    </section>
+
+    <!-- Love Calculator Section (BONUS!) -->
+    <section class="min-h-screen flex items-center justify-center px-4 py-20 relative z-10">
+        <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-12 max-w-2xl w-full">
+            <h2 class="pacifico text-4xl md:text-5xl text-pink-600 text-center mb-8">
+                Love Calculator 💗
+            </h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Your Name:</label>
+                    <input type="text" id="name1" class="w-full px-4 py-3 rounded-lg border-2 border-pink-300 focus:border-pink-500 outline-none" placeholder="Enter your name">
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Your Partner's Name:</label>
+                    <input type="text" id="name2" class="w-full px-4 py-3 rounded-lg border-2 border-pink-300 focus:border-pink-500 outline-none" placeholder="Enter partner's name">
+                </div>
+                
+                <button id="calculate-love" class="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold py-4 rounded-lg text-xl hover:scale-105 transition-all">
+                    Calculate Love! 💕
+                </button>
+                
+                <div id="love-result" class="hidden text-center mt-8">
+                    <div class="calculator-result">
+                        <span id="love-percentage">0</span>%
+                    </div>
+                    <p class="dancing-script text-2xl text-pink-600 mt-4" id="love-message"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Catch the Heart Game Section -->
+    <section class="min-h-screen flex items-center justify-center px-4 py-20 relative z-10">
+        <div class="max-w-4xl w-full">
+            <h2 class="pacifico text-4xl md:text-5xl text-pink-600 text-center mb-8">
+                Catch The Hearts! 💖
+            </h2>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 text-center">
+                <div class="mb-6">
+                    <p class="text-xl text-gray-700 mb-4">
+                        Klik hati-hati yang jatuh sebanyak mungkin!
+                    </p>
+                    <div class="flex justify-center gap-8 mb-4">
+                        <div>
+                            <p class="text-sm text-gray-600">Score:</p>
+                            <p class="text-3xl font-bold text-pink-600" id="game-score">0</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Time:</p>
+                            <p class="text-3xl font-bold text-purple-600" id="game-time">30</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <canvas id="game-canvas" width="600" height="400" class="mx-auto mb-4"></canvas>
+                
+                <button id="start-game" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold py-3 px-8 rounded-full text-xl hover:scale-105 transition-all">
+                    Start Game! 🎮
+                </button>
+                
+                <div id="game-over-message" class="hidden mt-6">
+                    <h3 class="pacifico text-3xl text-pink-600 mb-2">Game Over!</h3>
+                    <p class="dancing-script text-2xl text-purple-600" id="final-message"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Countdown to Next Valentine Section (BONUS!) -->
+    <section class="min-h-screen flex items-center justify-center px-4 py-20 relative z-10">
+        <div class="max-w-4xl w-full text-center">
+            <h2 class="pacifico text-4xl md:text-5xl text-pink-600 mb-12">
+                Days Until Next Valentine's Day 💝
+            </h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div class="countdown-box">
+                    <div class="countdown-number" id="days">0</div>
+                    <div class="text-white text-xl font-semibold">Days</div>
+                </div>
+                <div class="countdown-box">
+                    <div class="countdown-number" id="hours">0</div>
+                    <div class="text-white text-xl font-semibold">Hours</div>
+                </div>
+                <div class="countdown-box">
+                    <div class="countdown-number" id="minutes">0</div>
+                    <div class="text-white text-xl font-semibold">Minutes</div>
+                </div>
+                <div class="countdown-box">
+                    <div class="countdown-number" id="seconds">0</div>
+                    <div class="text-white text-xl font-semibold">Seconds</div>
+                </div>
+            </div>
+            
+            <p class="dancing-script text-2xl text-purple-600 mt-8">
+                But every day with you feels like Valentine's Day! 💕
+            </p>
+        </div>
+    </section>
+
+    <!-- Final Message Section -->
+    <section class="min-h-screen flex items-center justify-center px-4 py-20 relative z-10">
+        <div class="text-center max-w-3xl">
+            <h2 class="pacifico text-5xl md:text-6xl text-pink-600 mb-8 glow-text">
+                I Love You! 💖
+            </h2>
+            <p class="dancing-script text-3xl md:text-4xl text-purple-600 mb-8">
+                Today, Tomorrow, and Forever...
+            </p>
+            <p class="text-xl text-gray-700 leading-relaxed">
+                Thank you for being the most amazing person in my life. 
+                You make every day brighter, every moment sweeter, and every memory unforgettable.
+                Happy Valentine's Day, my love! 🌹💕
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-pink-100/50 py-8 text-center relative z-10">
+        <p class="dancing-script text-2xl text-pink-600">
+            Made with 💖 by someone who loves you very much
+        </p>
+        <p class="text-gray-600 mt-2">
+            © 2026 - All My Love For You
+        </p>
+    </footer>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="success-modal">
+        <div class="modal-content">
+            <h2 class="pacifico text-5xl text-pink-600 mb-4">Yay! 🎉</h2>
+            <p class="dancing-script text-3xl text-purple-600">
+                You said YES! 💕
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // FLOATING HEARTS BACKGROUND
+        // ==========================================
+        function createFloatingHeart() {
+            const container = document.getElementById('floating-hearts-container');
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.innerHTML = '💖';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
+            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            container.appendChild(heart);
+
+            setTimeout(() => {
+                heart.remove();
+            }, 7000);
+        }
+
+        setInterval(createFloatingHeart, 500);
+
+        // ==========================================
+        // MUSIC PLAYER
+        // ==========================================
+        const music = document.getElementById('background-music');
+        const musicToggle = document.getElementById('music-toggle');
+        const musicIcon = document.getElementById('music-icon');
+        let isPlaying = false;
+
+        musicToggle.addEventListener('click', () => {
+            if (isPlaying) {
+                music.pause();
+                musicIcon.textContent = '▶️';
+            } else {
+                music.play();
+                musicIcon.textContent = '⏸️';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // ==========================================
+        // PROPOSAL SECTION - MOVING "NO" BUTTON
+        // ==========================================
+        const yesButton = document.getElementById('yes-button');
+        const noButton = document.getElementById('no-button');
+        const questionContainer = document.getElementById('question-container');
+        const successMessage = document.getElementById('success-message');
+        const successModal = document.getElementById('success-modal');
+        const buttonsContainer = document.getElementById('buttons-container');
+
+        // Position Yes button in center initially
+        yesButton.style.position = 'relative';
+        yesButton.style.margin = '0 auto';
+        yesButton.style.display = 'block';
+
+        // Position No button initially
+        noButton.style.left = '50%';
+        noButton.style.top = '80px';
+        noButton.style.transform = 'translateX(-50%)';
+
+        // Move No button on hover and click
+        function moveNoButton() {
+            const container = buttonsContainer.getBoundingClientRect();
+            const button = noButton.getBoundingClientRect();
+            
+            const maxX = container.width - button.width - 20;
+            const maxY = container.height - button.height - 20;
+            
+            const randomX = Math.random() * maxX;
+            const randomY = Math.random() * maxY;
+            
+            noButton.style.left = randomX + 'px';
+            noButton.style.top = randomY + 'px';
+            noButton.style.transform = 'none';
+            
+            // Add shake animation to question
+            questionContainer.classList.add('shake-animation');
+            setTimeout(() => {
+                questionContainer.classList.remove('shake-animation');
+            }, 500);
+        }
+
+        noButton.addEventListener('mouseenter', moveNoButton);
+        noButton.addEventListener('click', moveNoButton);
+        noButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moveNoButton();
+        });
+
+        // Yes button click
+        yesButton.addEventListener('click', () => {
+            // Hide question
+            questionContainer.classList.add('hidden');
+            successMessage.classList.remove('hidden');
+            
+            // Show modal
+            successModal.classList.add('active');
+            
+            // Trigger confetti
+            const duration = 3 * 1000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#ff69b4', '#ff1493', '#ffc0cb', '#ff69b4']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#ff69b4', '#ff1493', '#ffc0cb', '#ff69b4']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+
+            // Hide modal after 3 seconds
+            setTimeout(() => {
+                successModal.classList.remove('active');
+            }, 3000);
+        });
+
+        // ==========================================
+        // ENVELOPE LETTER
+        // ==========================================
+        const envelope = document.getElementById('envelope');
+        const envelopeFlap = document.getElementById('envelope-flap');
+        const letter = document.getElementById('letter');
+        let isOpen = false;
+
+        envelope.addEventListener('click', () => {
+            if (!isOpen) {
+                envelopeFlap.classList.add('open');
+                setTimeout(() => {
+                    letter.classList.add('show');
+                }, 300);
+                isOpen = true;
+            } else {
+                letter.classList.remove('show');
+                setTimeout(() => {
+                    envelopeFlap.classList.remove('open');
+                }, 300);
+                isOpen = false;
+            }
+        });
+
+        // ==========================================
+        // LOVE CALCULATOR
+        // ==========================================
+        const calculateBtn = document.getElementById('calculate-love');
+        const loveResult = document.getElementById('love-result');
+        const lovePercentage = document.getElementById('love-percentage');
+        const loveMessage = document.getElementById('love-message');
+
+        calculateBtn.addEventListener('click', () => {
+            const name1 = document.getElementById('name1').value.trim();
+            const name2 = document.getElementById('name2').value.trim();
+            
+            if (name1 === '' || name2 === '') {
+                alert('Please enter both names! 💕');
+                return;
+            }
+
+            // Calculate "random" percentage based on names (always high!)
+            const combined = name1.toLowerCase() + name2.toLowerCase();
+            let sum = 0;
+            for (let char of combined) {
+                sum += char.charCodeAt(0);
+            }
+            
+            // Ensure percentage is always between 85-100%
+            let percentage = (sum % 16) + 85;
+            
+            loveResult.classList.remove('hidden');
+            
+            // Animate percentage
+            let current = 0;
+            const interval = setInterval(() => {
+                current++;
+                lovePercentage.textContent = current;
+                if (current >= percentage) {
+                    clearInterval(interval);
+                }
+            }, 20);
+
+            // Set message based on percentage
+            if (percentage >= 95) {
+                loveMessage.textContent = '💕 Perfect Match! You two are meant to be! 💕';
+            } else if (percentage >= 90) {
+                loveMessage.textContent = '💖 Amazing Connection! True love is here! 💖';
+            } else {
+                loveMessage.textContent = '💗 Great Chemistry! Love is in the air! 💗';
+            }
+
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ff69b4', '#ff1493', '#ffc0cb']
+            });
+        });
+
+        // ==========================================
+        // CATCH THE HEART GAME
+        // ==========================================
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const startGameBtn = document.getElementById('start-game');
+        const gameScoreEl = document.getElementById('game-score');
+        const gameTimeEl = document.getElementById('game-time');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const finalMessage = document.getElementById('final-message');
+
+        let hearts = [];
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval;
+        let spawnInterval;
+        let gameActive = false;
+
+        // Responsive canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const maxWidth = Math.min(600, container.clientWidth - 40);
+            canvas.width = maxWidth;
+            canvas.height = maxWidth * 0.67; // maintain aspect ratio
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Heart {
+            constructor() {
+                this.x = Math.random() * (canvas.width - 30);
+                this.y = -30;
+                this.speed = Math.random() * 2 + 2;
+                this.size = 25;
+            }
+
+            update() {
+                this.y += this.speed;
+            }
+
+            draw() {
+                ctx.font = this.size + 'px Arial';
+                ctx.fillText('💖', this.x, this.y);
+            }
+
+            isClicked(mouseX, mouseY) {
+                return mouseX >= this.x && 
+                       mouseX <= this.x + this.size &&
+                       mouseY >= this.y - this.size && 
+                       mouseY <= this.y;
+            }
+        }
+
+        function spawnHeart() {
+            hearts.push(new Heart());
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            hearts.forEach((heart, index) => {
+                heart.update();
+                heart.draw();
+
+                if (heart.y > canvas.height) {
+                    hearts.splice(index, 1);
+                }
+            });
+        }
+
+        function startGame() {
+            if (gameActive) return;
+            
+            gameActive = true;
+            score = 0;
+            timeLeft = 30;
+            hearts = [];
+            gameScoreEl.textContent = score;
+            gameTimeEl.textContent = timeLeft;
+            gameOverMessage.classList.add('hidden');
+            startGameBtn.textContent = 'Game Running... 🎮';
+            startGameBtn.disabled = true;
+
+            spawnInterval = setInterval(spawnHeart, 800);
+            gameInterval = setInterval(() => {
+                gameLoop();
+                timeLeft--;
+                gameTimeEl.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            clearInterval(spawnInterval);
+            gameActive = false;
+            hearts = [];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            startGameBtn.textContent = 'Play Again! 🎮';
+            startGameBtn.disabled = false;
+            
+            gameOverMessage.classList.remove('hidden');
+            
+            // Special messages based on score
+            if (score >= 30) {
+                finalMessage.textContent = `Amazing! ${score} hearts! You're as sweet as my love for you! 💕`;
+            } else if (score >= 20) {
+                finalMessage.textContent = `Great job! ${score} hearts! Just like the number of reasons I love you! 💖`;
+            } else if (score >= 10) {
+                finalMessage.textContent = `Nice! ${score} hearts! But my love for you is infinite! 💗`;
+            } else {
+                finalMessage.textContent = `${score} hearts! That's okay, you already have my heart! 💝`;
+            }
+
+            confetti({
+                particleCount: 50,
+                spread: 60,
+                origin: { y: 0.7 }
+            });
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (!gameActive) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            hearts.forEach((heart, index) => {
+                if (heart.isClicked(mouseX, mouseY)) {
+                    hearts.splice(index, 1);
+                    score++;
+                    gameScoreEl.textContent = score;
+                    
+                    // Mini confetti on click
+                    confetti({
+                        particleCount: 10,
+                        spread: 30,
+                        origin: { 
+                            x: e.clientX / window.innerWidth,
+                            y: e.clientY / window.innerHeight
+                        },
+                        colors: ['#ff69b4', '#ffc0cb']
+                    });
+                }
+            });
+        });
+
+        startGameBtn.addEventListener('click', startGame);
+
+        // ==========================================
+        // COUNTDOWN TO NEXT VALENTINE'S DAY
+        // ==========================================
+        function updateCountdown() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            let valentineDay = new Date(currentYear, 1, 14); // February 14
+
+            // If Valentine's Day has passed this year, count to next year
+            if (now > valentineDay) {
+                valentineDay = new Date(currentYear + 1, 1, 14);
+            }
+
+            const timeRemaining = valentineDay - now;
+
+            const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // ==========================================
+        // SMOOTH SCROLLING
+        // ==========================================
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // ==========================================
+        // INITIAL CONFETTI ON PAGE LOAD
+        // ==========================================
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#ff69b4', '#ff1493', '#ffc0cb', '#da70d6']
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>
