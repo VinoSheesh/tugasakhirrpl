@@ -83,51 +83,17 @@ body {
   animation: bounce 1s ease-in-out infinite;
 }
 
-/* Envelope Styles */
 .envelope {
   position: relative;
   width: 100%;
   max-width: 450px;
-  height: 400px;
-  margin: 0 auto;
+  height: 300px; /* Tinggi amplop */
+  margin: 150px auto 50px; /* Beri ruang di atas untuk surat keluar */
   perspective: 1500px;
+  cursor: pointer;
 }
 
 .envelope-flap {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 225px solid transparent;
-  border-right: 225px solid transparent;
-  border-top: 180px solid #ffc1e0;
-  transform-origin: top center;
-  transition: transform 0.6s ease;
-  cursor: pointer;
-  z-index: 3;
-}
-
-.envelope-flap.open {
-  transform: translateX(-50%) rotateX(-180deg);
-}
-
-.envelope-body {
-  position: absolute;
-  top: 180px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 450px;
-  height: 280px;
-  background: #ffb3d9;
-  border-radius: 0 0 10px 10px;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.envelope-body::before {
-  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -135,30 +101,65 @@ body {
   height: 0;
   border-left: 225px solid transparent;
   border-right: 225px solid transparent;
-  border-bottom: 120px solid #ff9ec7;
+  border-top: 160px solid #ffc1e0; /* Flap penutup */
+  transform-origin: top;
+  transition:
+    transform 0.5s ease,
+    z-index 0.3s;
+  z-index: 4; /* Di atas surat saat tertutup */
+}
+
+.envelope-flap.open {
+  transform: rotateX(180deg);
+  z-index: 1; /* Pindah ke belakang saat terbuka */
+}
+
+.envelope-body {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: #ffb3d9;
+  border-radius: 0 0 10px 10px;
+  z-index: 3;
+}
+
+/* Kantong depan amplop agar surat tertutup */
+.envelope-body::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 225px solid #ff9ec7;
+  border-right: 225px solid #ff9ec7;
+  border-top: 150px solid transparent; /* Membentuk huruf V di depan */
+  z-index: 5; /* Paling depan untuk menutupi surat */
+  pointer-events: none;
 }
 
 .letter {
   position: absolute;
-  top: 150px;
+  bottom: 10px; /* Posisi awal di dasar amplop */
   left: 50%;
   transform: translateX(-50%);
-  width: 380px;
+  width: 90%;
   background: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transition:
-    transform 0.6s ease,
-    top 0.6s ease;
-  z-index: 2;
-  max-height: 450px;
+  padding: 20px;
+  border-radius: 5px;
+  transition: all 0.7s ease;
+  z-index: 2; /* Di dalam amplop */
+  max-height: 350px;
   overflow-y: auto;
+  opacity: 0; /* Sembunyi total saat awal */
 }
 
 .letter.show {
-  top: -50px;
-  transform: translateX(-50%) scale(1.05);
+  bottom: 120px; /* Surat naik ke atas */
+  opacity: 1;
+  transform: translateX(-50%) scale(1.1);
+  z-index: 10; /* Muncul ke depan setelah keluar */
 }
 
 /* Polaroid Photo Style */
@@ -357,34 +358,57 @@ body {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .envelope {
-    max-width: 340px;
-    height: 350px;
+    width: 280px;      /* Ukuran lebar amplop di mobile */
+    height: 180px;     /* Tinggi amplop di mobile */
+    position: relative;
+    margin: 0 auto;
   }
 
   .envelope-flap {
-    border-left: 170px solid transparent;
-    border-right: 170px solid transparent;
-    border-top: 140px solid #ffc1e0;
+    /* Gunakan border-width yang totalnya pas dengan lebar .envelope (280px) */
+    border-left: 140px solid transparent;  /* 140 + 140 = 280 */
+    border-right: 140px solid transparent;
+    border-top: 100px solid #ffc1e0;
+    
+    /* Pastikan posisi top dan left nol agar tidak mengambang */
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    transform-origin: top;
   }
 
   .envelope-body {
-    width: 340px;
-    top: 140px;
-    height: 240px;
+    width: 100%;       /* Mengikuti lebar .envelope */
+    height: 100%;      /* Mengikuti tinggi .envelope */
+    position: absolute;
+    top: 0;            /* Tempelkan ke atas agar sejajar dengan flap */
+    left: 0;
+    background-color: #ff9ec7; /* Badan utama */
+    border-radius: 0 0 10px 10px;
+    z-index: 2;
   }
 
   .envelope-body::before {
-    border-left: 170px solid transparent;
-    border-right: 170px solid transparent;
-    border-bottom: 100px solid #ff9ec7;
+    /* Segitiga bagian bawah badan amplop */
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    border-left: 140px solid transparent;
+    border-right: 140px solid transparent;
+    border-bottom: 100px solid #ff85b6; /* Warna sedikit lebih gelap */
+    z-index: 4;
   }
 
   .letter {
-    width: 290px;
-    top: 120px;
-    padding: 20px;
-    max-height: 350px;
+    width: 100%;
+    height: 100%;
+    left: 50%;
+    top: 10px;
+    z-index: 1;
   }
+}
 
   .letter.show {
     top: -80px;

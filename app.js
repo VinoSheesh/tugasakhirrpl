@@ -137,19 +137,53 @@ let isOpen = false;
 
 envelope.addEventListener('click', () => {
     if (!isOpen) {
+        // 1. Buka Flap
         envelopeFlap.classList.add('open');
+
+        // 2. Keluarkan surat setelah flap mulai terbuka
         setTimeout(() => {
             letter.classList.add('show');
-        }, 300);
+
+            // 3. Trigger Konfeti
+            launchConfetti();
+        }, 400);
+
         isOpen = true;
     } else {
+        // Tutup kembali
         letter.classList.remove('show');
         setTimeout(() => {
             envelopeFlap.classList.remove('open');
-        }, 300);
+        }, 500);
         isOpen = false;
     }
 });
+
+function launchConfetti() {
+    const duration = 3 * 1000;
+    const end = Date.now() + duration;
+
+    (function frame() {
+        confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#ff69b4', '#ffb3d9', '#ffffff']
+        });
+        confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#ff69b4', '#ffb3d9', '#ffffff']
+        });
+
+        if (Date.now() < end) {
+            requestAnimationFrame(frame);
+        }
+    }());
+}
 
 // ==========================================
 // LOVE CALCULATOR
