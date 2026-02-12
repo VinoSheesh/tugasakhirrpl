@@ -255,27 +255,31 @@ const finalMessage = document.getElementById('final-message');
 let hearts = [];
 let score = 0;
 let timeLeft = 30;
-let gameInterval;
-let spawnInterval;
 let gameActive = false;
+let spawnInterval;
+let timerInterval;
+let animationFrameId;
 
-// Responsive canvas
+// 1. Responsive Canvas Setup
 function resizeCanvas() {
     const container = canvas.parentElement;
-    const maxWidth = Math.min(600, container.clientWidth - 40);
+    const maxWidth = Math.min(600, container.clientWidth);
     canvas.width = maxWidth;
-    canvas.height = maxWidth * 0.67; // maintain aspect ratio
+    canvas.height = 400; // Tetap 400 agar ruang jatuh cukup luas
 }
 
-resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
+// 2. Heart Class
 class Heart {
     constructor() {
-        this.x = Math.random() * (canvas.width - 30);
-        this.y = -30;
-        this.speed = Math.random() * 2 + 2;
-        this.size = 25;
+        this.size = Math.random() * (40 - 25) + 25; // Variasi ukuran
+        this.x = Math.random() * (canvas.width - this.size);
+        this.y = -50;
+        // Kecepatan ditingkatkan agar menantang di 60fps
+        this.speed = Math.random() * 2 + 3;
+        this.opacity = 1;
     }
 
     update() {
@@ -283,116 +287,153 @@ class Heart {
     }
 
     draw() {
-        ctx.font = this.size + 'px Arial';
+        ctx.font = `${this.size}px Arial`;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
         ctx.fillText('💖', this.x, this.y);
     }
 
     isClicked(mouseX, mouseY) {
-        return mouseX >= this.x &&
-            mouseX <= this.x + this.size &&
-            mouseY >= this.y - this.size &&
-            mouseY <= this.y;
+        // Area klik diperluas sedikit agar lebih responsif di mobile
+        return mouseX >= this.x - 10 &&
+            mouseX <= this.x + this.size + 10 &&
+            mouseY >= this.y - 10 &&
+            mouseY <= this.y + this.size + 10;
     }
 }
 
+// 3. Game Logic Functions
 function spawnHeart() {
-    hearts.push(new Heart());
+    if (gameActive) {
+        hearts.push(new Heart());
+    }
 }
 
 function gameLoop() {
+    if (!gameActive) return;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    hearts.forEach((heart, index) => {
-        heart.update();
-        heart.draw();
+    // Update & Draw hearts (loop terbalik agar aman saat splicing)
+    for (let i = hearts.length - 1; i >= 0; i--) {
+        hearts[i].update();
+        hearts[i].draw();
 
-        if (heart.y > canvas.height) {
-            hearts.splice(index, 1);
+        // Hapus jika keluar layar bawah
+        if (hearts[i].y > canvas.height) {
+            hearts.splice(i, 1);
         }
-    });
+    }
+
+    animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function startGame() {
     if (gameActive) return;
 
+    // Reset State
     gameActive = true;
     score = 0;
     timeLeft = 30;
     hearts = [];
+
+    // UI Update
     gameScoreEl.textContent = score;
     gameTimeEl.textContent = timeLeft;
     gameOverMessage.classList.add('hidden');
-    startGameBtn.textContent = 'Game Running... 🎮';
     startGameBtn.disabled = true;
+    startGameBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    startGameBtn.textContent = 'Playing... 💖';
 
-    spawnInterval = setInterval(spawnHeart, 800);
-    gameInterval = setInterval(() => {
-        gameLoop();
+    // Start Intervals & Loops
+    spawnInterval = setInterval(spawnHeart, 600); // Muncul setiap 0.6 detik
+
+    timerInterval = setInterval(() => {
         timeLeft--;
         gameTimeEl.textContent = timeLeft;
-
-        if (timeLeft <= 0) {
-            endGame();
-        }
+        if (timeLeft <= 0) endGame();
     }, 1000);
+
+    animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function endGame() {
-    clearInterval(gameInterval);
-    clearInterval(spawnInterval);
     gameActive = false;
-    hearts = [];
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    clearInterval(spawnInterval);
+    clearInterval(timerInterval);
+    cancelAnimationFrame(animationFrameId);
 
-    startGameBtn.textContent = 'Play Again! 🎮';
     startGameBtn.disabled = false;
+    startGameBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    startGameBtn.textContent = 'Play Again! 🎮';
 
     gameOverMessage.classList.remove('hidden');
 
-    // Special messages based on score
-    if (score >= 30) {
-        finalMessage.textContent = `Amazing! ${score} hearts! You're as sweet as my love for you! 💕`;
-    } else if (score >= 20) {
-        finalMessage.textContent = `Great job! ${score} hearts! Just like the number of reasons I love you! 💖`;
+    // Pesan khusus berdasarkan skor
+    if (score >= 40) {
+        finalMessage.textContent = `Godlike! ${score} hearts! You're a pro at catching my love! 🏆`;
+    } else if (score >= 25) {
+        finalMessage.textContent = `Amazing! ${score} hearts! You're so sweet! 💕`;
     } else if (score >= 10) {
-        finalMessage.textContent = `Nice! ${score} hearts! But my love for you is infinite! 💗`;
+        finalMessage.textContent = `Good job! ${score} hearts! Keep the love growing! 💖`;
     } else {
-        finalMessage.textContent = `${score} hearts! That's okay, you already have my heart! 💝`;
+        finalMessage.textContent = `${score} hearts! It's okay, my heart is already yours! 💝`;
     }
 
+    // Full Confetti Explosion
     confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.7 }
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 }
     });
 }
 
-canvas.addEventListener('click', (e) => {
+// 4. Event Listeners
+canvas.addEventListener('mousedown', (e) => {
     if (!gameActive) return;
 
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    hearts.forEach((heart, index) => {
-        if (heart.isClicked(mouseX, mouseY)) {
-            hearts.splice(index, 1);
-            score++;
-            gameScoreEl.textContent = score;
-
-            // Mini confetti on click
+    for (let i = hearts.length - 1; i >= 0; i--) {
+        if (hearts[i].isClicked(mouseX, mouseY)) {
+            // Efek Confetti Kecil saat klik
             confetti({
-                particleCount: 10,
-                spread: 30,
+                particleCount: 15,
+                spread: 40,
                 origin: {
                     x: e.clientX / window.innerWidth,
                     y: e.clientY / window.innerHeight
                 },
-                colors: ['#ff69b4', '#ffc0cb']
+                colors: ['#ff69b4', '#ff1493']
             });
+
+            hearts.splice(i, 1);
+            score++;
+            gameScoreEl.textContent = score;
+            break; // Klik satu hati saja per event
         }
-    });
+    }
 });
+
+// Support for mobile touch
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Mencegah scrolling saat main
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = touch.clientX - rect.left;
+    const mouseY = touch.clientY - rect.top;
+
+    for (let i = hearts.length - 1; i >= 0; i--) {
+        if (hearts[i].isClicked(mouseX, mouseY)) {
+            hearts.splice(i, 1);
+            score++;
+            gameScoreEl.textContent = score;
+            break;
+        }
+    }
+}, { passive: false });
 
 startGameBtn.addEventListener('click', startGame);
 
